@@ -35,6 +35,7 @@ It can also be explictly set to a number or a function called without arguments 
 - python-mode
 - html-mode
 - web-mode
+- swift-mode
 
 ## Interactive commands
 

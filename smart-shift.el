@@ -61,6 +61,7 @@
             ((member web-mode-content-type '("javascript" "json" "jsx" "php"))
              web-mode-code-indent-offset)
             (t web-mode-markup-indent-offset))) ; xml, html, etc...
+     ((eq major-mode 'swift-mode) swift-indent-offset)
      (t tab-width)))
 
   "Indentation level according to current major mode.
