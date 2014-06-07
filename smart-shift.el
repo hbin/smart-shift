@@ -73,8 +73,8 @@
     (sh-mode . sh-basic-offset)
     (yaml-mode . yaml-indent-offset))
   "Alist which maps major modes to its indentation-level."
-  :type '(choice (function :tag "Must called without arguments and evaluting to a number")
-                 (repeat (cons (symbol :tag "Major mode name")
+  :type '(repeat (cons (symbol :tag "Major mode name")
+                       (choice (function :tag "Method evaluting to a number")
                                (integer :tag "Indentation level"
                                         :value tab-width))))
   :group 'smart-shift)
