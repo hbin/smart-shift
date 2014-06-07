@@ -136,6 +136,20 @@
             (define-key map (kbd "C-c ]") 'smart-shift-right)
             map))
 
+;;;###autoload
+(defun smart-shift-mode-on ()
+  "Turn on smart-shift mode."
+  (smart-shift-mode 1))
+
+;;;###autoload
+(defun smart-shift-mode-off ()
+  "Turn off smart-shift mode."
+  (smart-shift-mode 0))
+
+;;;###autoload
+(define-globalized-minor-mode global-smart-shift-mode
+  smart-shift-mode smart-shift-mode-on)
+
 (provide 'smart-shift)
 
 ;;; smart-shift.el ends here
