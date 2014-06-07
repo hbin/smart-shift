@@ -93,7 +93,7 @@
                                      (derived-mode-p e)))))) ; Or, derived from?
     (cond ((numberp offset) offset)
           ((functionp offset) (funcall offset))
-          ((symbolp offset) (eval offset))
+          ((symbolp offset) (or (eval offset) tab-width))
           (t tab-width))))
 
 ;;;###autoload
