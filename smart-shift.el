@@ -95,7 +95,7 @@
                                      (derived-mode-p e)))))) ; Or, derived from?
     (cond ((numberp offset) offset)
           ((functionp offset) (funcall offset))
-          ((symbolp offset) (or (eval offset) tab-width))
+          ((symbolp offset) (symbol-value offset))
           (t tab-width))))
 
 ;;;###autoload
@@ -117,7 +117,8 @@
                      ((equal arg '(4)) 4) ; C-u
                      (t arg)))            ; all other cases
         (shift (or smart-shift-indentation-level
-                   (smart-shift-infer-indentation-level))))
+                   (smart-shift-infer-indentation-level)
+                   tab-width)))
     (indent-rigidly beg end (* times shift))))
 
 ;;;###autoload
