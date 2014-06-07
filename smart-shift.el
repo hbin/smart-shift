@@ -33,43 +33,70 @@
 
 ;;; Code:
 
-(defvar smart-shift-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c [") 'smart-shift-left)
-    (define-key map (kbd "C-c ]") 'smart-shift-right)
-    map)
-  "Keymap for `smart-shift-mode'.")
+(defgroup smart-shift nil
+  "Shift line/region by inferred indentation level."
+  :prefix "smart-shift-"
+  :group 'convenience)
 
-(defvar smart-shift-indentation-level
-  (lambda ()
-    (cond
-     ((eq major-mode 'ruby-mode) ruby-indent-level)
-     ((eq major-mode 'js-mode) js-indent-level)
-     ((eq major-mode 'coffee-mode) coffee-tab-width)
-     ((eq major-mode 'css-mode) css-indent-offset)
-     ((eq major-mode 'scss-mode) css-indent-offset)
-     ((eq major-mode 'yaml-mode) yaml-indent-offset)
-     ((eq major-mode 'c-mode) c-basic-offset)
-     ((eq major-mode 'sh-mode) sh-basic-offset)
-     ((eq major-mode 'slim-mode) slim-indent-offset)
-     ((eq major-mode 'python-mode) python-indent-offset)
-     ((eq major-mode 'html-mode) sgml-basic-offset)
-     ((eq major-mode 'web-mode)
-      (message web-mode-content-type)
-      (cond ((string= web-mode-content-type "css")
-             web-mode-css-indent-offset)
-            ((member web-mode-content-type '("javascript" "json" "jsx" "php"))
-             web-mode-code-indent-offset)
-            (t web-mode-markup-indent-offset))) ; xml, html, etc...
-     ((eq major-mode 'swift-mode) swift-indent-offset)
-     (t tab-width)))
+;;;###autoload
+(defcustom smart-shift-mode-alist
+  '((lisp-mode . lisp-body-indent)
+    (emacs-lisp-mode . lisp-body-indent)
 
-  "Indentation level according to current major mode.
+    ;; Modes directly supported by CC Mode
+    (c-mode . c-basic-offset)
+    (c++-mode . c-basic-offset)
+    (objc-mode . c-basic-offset)
+    (java-mode . c-basic-offset)
+    (idl-mode . c-basic-offset)
+    (pike-mode . c-basic-offset)
+    (awk-mode . c-basic-offset)
 
-If none of modes listed below match, use the `tab-width' as default.
-Can also be set explictly to a number or a function called without arguments
-and evaluting to a number.")
+    (ruby-mode . ruby-indent-level)
+    (python-mode . python-indent-offset)
+    (swift-mode . swift-indent-offset)
 
+    (js-mode . js-indent-level)
+    (js2-mode . js2-basic-offset)
+    (coffee-mode . coffee-tab-width)
+
+    (css-mode . css-indent-offset)
+    (slim-mode . slim-indent-offset)
+    (html-mode . sgml-basic-offset)
+    (web-mode . (lambda ()
+                  (cond ((string= web-mode-content-type "css")
+                         web-mode-css-indent-offset)
+                        ((member web-mode-content-type '("javascript" "json" "jsx" "php"))
+                         web-mode-code-indent-offset)
+                        (t web-mode-markup-indent-offset)))) ; xml, html, etc...
+
+    (sh-mode . sh-basic-offset)
+    (yaml-mode . yaml-indent-offset))
+  "Alist which maps major modes to its indentation-level."
+  :type '(choice (function :tag "Must called without arguments and evaluting to a number")
+                 (repeat (cons (symbol :tag "Major mode name")
+                               (integer :tag "Indentation level"
+                                        :value tab-width))))
+  :group 'smart-shift)
+
+;;;###autoload
+(defvar smart-shift-indentation-level nil
+  "Variable used to specify the indentation-level for the current buffer.")
+(make-variable-buffer-local 'smart-shift-indentation-level)
+
+;;;###autoload
+(defun smart-shift-infer-indentation-level ()
+  "Infer indentation-level of current major mode."
+  (let ((offset (assoc-default major-mode smart-shift-mode-alist
+                               (lambda (e mjr)
+                                 (or (eq mjr e) ; The current mode equal to?
+                                     (derived-mode-p e)))))) ; Or, derived from?
+    (cond ((numberp offset) offset)
+          ((functionp offset) (funcall offset))
+          ((symbolp offset) (eval offset))
+          (t tab-width))))
+
+;;;###autoload
 (defun smart-shift-right (&optional arg)
   "Shift the line or region to the ARG times to the right."
   (interactive "P")
@@ -87,11 +114,11 @@ and evaluting to a number.")
         (times (cond ((equal arg nil) 1) ; universal-argument not called
                      ((equal arg '(4)) 4) ; C-u
                      (t arg)))            ; all other cases
-        (indentation-level (if (functionp smart-shift-indentation-level)
-                               (funcall smart-shift-indentation-level)
-                             smart-shift-indentation-level)))
-    (indent-rigidly beg end (* times indentation-level))))
+        (shift (or smart-shift-indentation-level
+                   (smart-shift-infer-indentation-level))))
+    (indent-rigidly beg end (* times shift))))
 
+;;;###autoload
 (defun smart-shift-left (&optional arg)
   "Shift the line or region to the ARG times to the left."
   (interactive "P")
@@ -103,9 +130,11 @@ and evaluting to a number.")
 ;;;###autoload
 (define-minor-mode smart-shift-mode
   "Shift line/region to left/right."
-  :init-value nil
   :lighter ""
-  :keymap smart-shift-mode-map)
+  :keymap (let ((map (make-sparse-keymap)))
+            (define-key map (kbd "C-c [") 'smart-shift-left)
+            (define-key map (kbd "C-c ]") 'smart-shift-right)
+            map))
 
 (provide 'smart-shift)
 
