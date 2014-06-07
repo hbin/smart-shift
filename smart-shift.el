@@ -71,7 +71,9 @@
                         (t web-mode-markup-indent-offset)))) ; xml, html, etc...
 
     (sh-mode . sh-basic-offset)
-    (yaml-mode . yaml-indent-offset))
+    (yaml-mode . yaml-indent-offset)
+    (text-mode . tab-width)
+    (fundamental-mode . tab-width))
   "Alist which maps major modes to its indentation-level."
   :type '(repeat (cons (symbol :tag "Major mode name")
                        (choice (function :tag "Method evaluting to a number")
