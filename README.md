@@ -52,6 +52,9 @@ Or, for some major mode we haven't support, add following snippets to your confi
 - web-mode
 - sh-mode
 - yaml-mode
+- text-mode
+- markdown-mode
+- fundamental-mode
 
 ## Interactive commands
 
