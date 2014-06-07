@@ -8,34 +8,50 @@ Once you have setup [Melpa](http://melpa.milkbox.net/#/getting-started) you can 
 ### Manual
 
 ```lisp
-(add-to-list 'load-path "/path/to/smart-shift.el")
+(add-to-list 'load-path "/path/to/smart-shift")
 (require 'smart-shift)
-(smart-shift-mode 1)
+(global-smart-shift-mode 1)
 ```
 
 ## Customizing
 **Smart Shift** will infer the indentation level of current major mode, if none of major modes listed below match, use the `tab-width` as default.
 
-It can also be explictly set to a number or a function called without arguments and evaluting to a number.
+It can also be set to a number explictly.
 
 ```lisp
 (setq smart-shift-indentation-level 2)
 ```
+Or, for some major mode we haven't support, add following snippets to your config file. Test it and send a PR.
+```lisp
+(eval-after-load 'your-major-mode
+  '(progn
+     (add-to-list 'smart-shift-mode-alist
+                  '(major-mode-or-derived-mode . customize-base-offset))))
+```
 
 ### Supported major modes
+- lisp-mode
+- emacs-lisp-mode
+- c-mode
+- c++-mode
+- objc-mode
+- java-mode
+- idl-mode
+- pike-mode
+- awk-mode
 - ruby-mode
+- python-mode
+- swift-mode
 - js-mode
+- js2-mode
 - coffee-mode
 - css-mode
 - scss-mode
-- yaml-mode
-- c-mode
-- sh-mode
 - slim-mode
-- python-mode
 - html-mode
 - web-mode
-- swift-mode
+- sh-mode
+- yaml-mode
 
 ## Interactive commands
 
@@ -46,4 +62,4 @@ Command              | Keybinding | Description
 
 
 ## Contribute
-Fork and pull request!
+Forks and pull requests are welcome!
