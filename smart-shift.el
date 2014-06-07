@@ -90,9 +90,8 @@
 (defun smart-shift-infer-indentation-level ()
   "Infer indentation-level of current major mode."
   (let ((offset (assoc-default major-mode smart-shift-mode-alist
-                               (lambda (e mjr)
-                                 (or (eq mjr e) ; The current mode equal to?
-                                     (derived-mode-p e)))))) ; Or, derived from?
+                               (lambda (k v)
+                                 (derived-mode-p k)))))
     (cond ((numberp offset) offset)
           ((functionp offset) (funcall offset))
           ((symbolp offset) (symbol-value offset))
