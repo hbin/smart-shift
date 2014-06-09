@@ -2,7 +2,8 @@
 **Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current major mode indentation width.
 
 ## Installation
-### Melpa(Coming soon...)
+
+### Melpa
 Once you have setup [Melpa](http://melpa.milkbox.net/#/getting-started) you can use `package-install` command to install. The package name is `smart-shift`.
 
 ### Manual
