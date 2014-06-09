@@ -1,5 +1,5 @@
 # Smart Shift
-**Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current moajor mode indentation width.
+**Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current major mode indentation width.
 
 ## Installation
 ### Melpa(Coming soon...)
