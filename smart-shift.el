@@ -110,7 +110,9 @@
         (end (if (use-region-p)
                  (save-excursion
                    (goto-char (region-end))
-                   (line-end-position))
+                   (if (bolp)
+                       (1- (region-end))
+                     (line-end-position)))
                (line-end-position)))
         (times (cond ((equal arg nil) 1) ; universal-argument not called
                      ((equal arg '(4)) 4) ; C-u
