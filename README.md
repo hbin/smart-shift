@@ -64,6 +64,8 @@ Command              | Keybinding | Description
    smart-shift-left  | `C-c [`    | Shift the line or region ARG times to the left.
    smart-shift-right | `C-c ]`    | Shift the line or region ARG times to the right.
 
+After invoking `smart-shift-left` or `smart-shift-right` the first time, you can simply hit `[` or `]` to continuously shift to left or right, respectively.
+
 If you use the [key-chord](http://www.emacswiki.org/emacs/key-chord.el) like me. I strongly recommend you add the following snippets:
 
 ```lisp

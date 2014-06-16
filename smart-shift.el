@@ -120,7 +120,8 @@
         (shift (or smart-shift-indentation-level
                    (smart-shift-infer-indentation-level)
                    tab-width)))
-    (indent-rigidly beg end (* times shift))))
+    (indent-rigidly beg end (* times shift))
+    (smart-shift-override-local-map)))
 
 ;;;###autoload
 (defun smart-shift-left (&optional arg)
@@ -139,6 +140,29 @@
             (define-key map (kbd "C-c [") 'smart-shift-left)
             (define-key map (kbd "C-c ]") 'smart-shift-right)
             map))
+
+(defun smart-shift-override-local-map ()
+  "Override local key map for continuous indentation."
+  (setq overriding-local-map
+        (let ((map (copy-keymap smart-shift-mode-map)))
+          (define-key map (kbd "]") 'smart-shift-right)
+          (define-key map (kbd "[") 'smart-shift-left)
+          (define-key map [t] 'smart-shift-pass-through) ;done with shifting
+          map)))
+
+;;;###autoload
+(defun smart-shift-pass-through ()
+  "Finish shifting and invoke the corresponding command."
+  (interactive)
+  (setq overriding-local-map nil)
+  (let* ((keys (progn
+                 (setq unread-command-events
+                       (append (this-single-command-raw-keys)
+                               unread-command-events))
+                 (read-key-sequence-vector "")))
+         (command (and keys (key-binding keys))))
+    (when (commandp command)
+      (call-interactively command))))
 
 ;;;###autoload
 (defun smart-shift-mode-on ()
