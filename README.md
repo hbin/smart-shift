@@ -1,4 +1,7 @@
+[![MELPA](http://melpa.org/packages/smart-shift-badge.svg)](http://melpa.org/#/smart-shift)
+
 # Smart Shift
+
 **Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current major mode indentation width.
 
 ## Installation
