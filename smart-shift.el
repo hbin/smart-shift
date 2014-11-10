@@ -38,7 +38,6 @@
   :prefix "smart-shift-"
   :group 'convenience)
 
-;;;###autoload
 (defcustom smart-shift-mode-alist
   '((lisp-mode . lisp-body-indent)
     (emacs-lisp-mode . lisp-body-indent)
@@ -81,12 +80,31 @@
                                         :value tab-width))))
   :group 'smart-shift)
 
-;;;###autoload
+(defvar smart-shift-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-C <left>") 'smart-shift-left)
+    (define-key map (kbd "C-C <right>") 'smart-shift-right)
+    (define-key map (kbd "C-C <up>") 'smart-shift-up)
+    (define-key map (kbd "C-C <down>") 'smart-shift-down)
+    map))
+
+(defun smart-shift-override-local-map ()
+  "Override local key map for continuous indentation."
+  (setq overriding-local-map
+        (let ((map (copy-keymap smart-shift-mode-map)))
+          (define-key map (kbd "<left>") 'smart-shift-left)
+          (define-key map (kbd "<right>") 'smart-shift-right)
+          (define-key map (kbd "<up>") 'smart-shift-up)
+          (define-key map (kbd "<down>") 'smart-shift-down)
+          (define-key map [t] 'smart-shift-pass-through) ;done with shifting
+          map))
+  (message (propertize "Still in smart-shift key chord..."
+                       'face 'error)))
+
 (defvar smart-shift-indentation-level nil
   "Variable used to specify the indentation-level for the current buffer.")
 (make-variable-buffer-local 'smart-shift-indentation-level)
 
-;;;###autoload
 (defun smart-shift-infer-indentation-level ()
   "Infer indentation-level of current major mode."
   (let ((offset (assoc-default major-mode smart-shift-mode-alist
@@ -97,12 +115,22 @@
           ((symbolp offset) (symbol-value offset))
           (t tab-width))))
 
-;;;###autoload
-(defun smart-shift-right (&optional arg)
-  "Shift the line or region to the ARG times to the right."
-  (interactive "P")
-  (let ((deactivate-mark nil)
-        (beg (if (use-region-p)
+(defun smart-shift-mode-on ()
+  "Turn on smart-shift mode."
+  (smart-shift-mode 1))
+
+(defun smart-shift-mode-off ()
+  "Turn off smart-shift mode."
+  (smart-shift-mode 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Line or Region ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun smart-indent-lines (step)
+  (and (not (integerp step))
+       (error "smart-indent-lines's argument STEP should be an integer! step = %s"
+              step))
+  (let ((beg (if (use-region-p)
                  (save-excursion
                    (goto-char (region-beginning))
                    (line-beginning-position))
@@ -110,45 +138,103 @@
         (end (if (use-region-p)
                  (save-excursion
                    (goto-char (region-end))
-                   (if (bolp)
-                       (1- (region-end))
-                     (line-end-position)))
-               (line-end-position)))
-        (times (cond ((equal arg nil) 1) ; universal-argument not called
+                   (line-end-position))
+               (line-end-position))))
+    (indent-rigidly beg end step)))
+
+(defun smart-shift-lines (step)
+  "Move the current line or region to STEP lines forwardly. Negative value of 
+STEP means move backwardly. Notice: It won't modify `kill-ring'."
+  (and (not (integerp step))
+       (error "smart-shift-lines's argument STEP should be an integer! step = %s"
+              step))
+  ;; There're two situation:
+  ;;
+  ;; (point) ---------------
+  ;; ---------------- (mark)
+  ;;
+  ;; or
+  ;;
+  ;; (mark) ----------------
+  ;; --------------- (point)
+  ;;
+  ;; So here are the point-excursion and mark-excursion.
+  (let* ((beg (if (use-region-p)
+                  (save-excursion
+                    (goto-char (region-beginning))
+                    (line-beginning-position 1))
+                (line-beginning-position 1)))
+         (end (if (use-region-p)
+                  (save-excursion
+                    (goto-char (region-end))
+                    (line-beginning-position 2))
+                (line-beginning-position 2)))
+         (point-excursion (- (point) end))
+         (mark-excursion (- (mark) (point)))
+         (text (delete-and-extract-region beg end)))
+    ;; Shift text.
+    (forward-line step)
+    (insert text)
+    ;; Set new point.
+    (goto-char (+ (point) point-excursion))
+    ;; Set new mark.
+    (when (use-region-p)
+      (push-mark (+ (point) mark-excursion) t t))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interactive Functions ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;###autoload
+(defun smart-shift-right (&optional arg)
+  "Shift the line or region to the ARG times to the right."
+  ;; TODO: Think about what things can shift right for convenient.
+  (interactive "P")
+  (let ((deactivate-mark nil)
+        (times (cond ((equal arg nil) 1)  ; universal-argument not called
                      ((equal arg '(4)) 4) ; C-u
                      (t arg)))            ; all other cases
         (shift (or smart-shift-indentation-level
                    (smart-shift-infer-indentation-level)
                    tab-width)))
-    (indent-rigidly beg end (* times shift))
+    (smart-indent-lines (* times shift))
     (smart-shift-override-local-map)))
 
 ;;;###autoload
 (defun smart-shift-left (&optional arg)
   "Shift the line or region to the ARG times to the left."
+  ;; TODO: Think about what things can shift left for convenient.
   (interactive "P")
-  (let ((times (cond ((equal arg nil) 1) ; universal-argument not called
+  (let ((deactivate-mark nil)
+        (times (cond ((equal arg nil) 1)  ; universal-argument not called
                      ((equal arg '(4)) 4) ; C-u
-                     (t arg))))           ; all other cases
-    (smart-shift-right (* -1 times))))
+                     (t arg)))            ; all other cases
+        (shift (or smart-shift-indentation-level
+                   (smart-shift-infer-indentation-level)
+                   tab-width)))
+    (smart-indent-lines (* -1 (* times shift)))
+    (smart-shift-override-local-map)))
 
 ;;;###autoload
-(define-minor-mode smart-shift-mode
-  "Shift line/region to left/right."
-  :lighter ""
-  :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c [") 'smart-shift-left)
-            (define-key map (kbd "C-c ]") 'smart-shift-right)
-            map))
+(defun smart-shift-up (&optional arg)
+  "Shift current line or region to the ARG lines backwardly."
+  ;; TODO: Think about what things can shift up for convenient.
+  (interactive "P")
+  (let ((deactivate-mark nil))
+    (smart-shift-lines (* -1 (cond ((equal arg nil) 1)
+                                   ((equal arg '(4)) 4)
+                                   ((t arg)))))
+    (smart-shift-override-local-map)))
 
-(defun smart-shift-override-local-map ()
-  "Override local key map for continuous indentation."
-  (setq overriding-local-map
-        (let ((map (copy-keymap smart-shift-mode-map)))
-          (define-key map (kbd "]") 'smart-shift-right)
-          (define-key map (kbd "[") 'smart-shift-left)
-          (define-key map [t] 'smart-shift-pass-through) ;done with shifting
-          map)))
+;;;###autoload
+(defun smart-shift-down (&optional arg)
+  "Shift current line or region to the ARG lines forwardly."
+  ;; TODO: Think about what things can shift down for convenient.
+  (interactive "P")
+  (let ((deactivate-mark nil))
+    (smart-shift-lines (cond ((equal arg nil) 1)
+                             ((equal arg '(4)) 4)
+                             ((t arg))))
+    (smart-shift-override-local-map)))
 
 ;;;###autoload
 (defun smart-shift-pass-through ()
@@ -162,17 +248,14 @@
                  (read-key-sequence-vector "")))
          (command (and keys (key-binding keys))))
     (when (commandp command)
-      (call-interactively command))))
+      (call-interactively command)))
+  (message "Exit smart-shift key chord!"))
 
 ;;;###autoload
-(defun smart-shift-mode-on ()
-  "Turn on smart-shift mode."
-  (smart-shift-mode 1))
-
-;;;###autoload
-(defun smart-shift-mode-off ()
-  "Turn off smart-shift mode."
-  (smart-shift-mode 0))
+(define-minor-mode smart-shift-mode
+  "Shift line/region to left/right."
+  :lighter ""
+  :keymap smart-shift-mode-map)
 
 ;;;###autoload
 (define-globalized-minor-mode global-smart-shift-mode
