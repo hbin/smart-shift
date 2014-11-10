@@ -2,7 +2,7 @@
 
 # Smart Shift
 
-**Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current major mode indentation width.
+**Smart Shift** is a minor mode for conveniently shift the line/region to the left/right by the current major mode indentation width or shift line/region backwardly/forwardly by lines.
 
 ## Installation
 
@@ -64,10 +64,12 @@ Or, for some major mode we haven't support, add following snippets to your confi
 
 Command              | Keybinding | Description
 ---------------------|------------|--------------------------------------------------------
-   smart-shift-left  | `C-c [`    | Shift the line or region ARG times to the left.
-   smart-shift-right | `C-c ]`    | Shift the line or region ARG times to the right.
+   smart-shift-left  | `C-C <left>`     | Shift the line or region ARG times to the left.
+   smart-shift-right | `C-C <right>`    | Shift the line or region ARG times to the right.
+   smart-shift-up    | `C-C <up>`       | Shift the line or region ARG lines backwardly.
+   smart-shift-down  | `C-C <down>`     | Shift the line or region ARG lines forwardly.
 
-After invoking `smart-shift-left` or `smart-shift-right` the first time, you can simply hit `[` or `]` to continuously shift to left or right, respectively.
+After invoking `smart-shift-<arrow>` the first time, you can simply hit the `<arrow>` key to continuously shift, respectively.
 
 If you use the [key-chord](http://www.emacswiki.org/emacs/key-chord.el) like me. I strongly recommend you add the following snippets:
 
