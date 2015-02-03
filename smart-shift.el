@@ -6,7 +6,7 @@
 ;; Maintainer: Bin Huang <huangbin88@foxmail.com>
 ;; URL: https://github.com/hbin/smart-shift
 ;; Created: 5th Jun 2014
-;; Version: 0.2
+;; Version: 0.3
 ;; Keywords: convenience, tools
 
 ;; This file is NOT part of GNU Emacs.
@@ -143,7 +143,7 @@
     (indent-rigidly beg end step)))
 
 (defun smart-shift-lines (step)
-  "Move the current line or region to STEP lines forwardly. Negative value of 
+  "Move the current line or region to STEP lines forwardly. Negative value of
 STEP means move backwardly. Notice: It won't modify `kill-ring'."
   (and (not (integerp step))
        (error "smart-shift-lines's argument STEP should be an integer! step = %s"
@@ -222,7 +222,7 @@ STEP means move backwardly. Notice: It won't modify `kill-ring'."
   (let ((deactivate-mark nil))
     (smart-shift-lines (* -1 (cond ((equal arg nil) 1)
                                    ((equal arg '(4)) 4)
-                                   ((t arg)))))
+                                   (t arg))))
     (smart-shift-override-local-map)))
 
 ;;;###autoload
@@ -233,7 +233,7 @@ STEP means move backwardly. Notice: It won't modify `kill-ring'."
   (let ((deactivate-mark nil))
     (smart-shift-lines (cond ((equal arg nil) 1)
                              ((equal arg '(4)) 4)
-                             ((t arg))))
+                             (t arg)))
     (smart-shift-override-local-map)))
 
 ;;;###autoload
