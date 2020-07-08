@@ -170,7 +170,9 @@ STEP means move backwardly. Notice: It won't modify `kill-ring'."
                     (line-beginning-position 2))
                 (line-beginning-position 2)))
          (point-excursion (- (point) end))
-         (mark-excursion (- (mark) (point)))
+         (mark-excursion (if (use-region-p)
+                             (- (mark) (point))
+                           0))
          (text (delete-and-extract-region beg end)))
     ;; Shift text.
     (forward-line step)
